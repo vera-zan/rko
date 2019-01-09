@@ -1,0 +1,92 @@
+---
+title: "Bateries"
+output: html_notebook
+---
+Research question: Is there a difference in the battery lifetime for different types of material and different operating temperatures?
+Solution: We will use a two-way anova with replication - how does two factors (temperature and type of material) effect battery lifetime.
+
+
+```{r}
+#install.packages("tidyverse")
+#install.packages("ggpubr") 
+library(tidyverse)
+library(ggpubr)
+```
+
+
+We need to import our data for analysis. 
+```{r}
+library(readxl)
+baterie <- read_excel("baterieVZ.xlsx")
+View(baterie)
+```
+
+
+Next we want to see the internal structure of our data.
+```{r}
+str(baterie)
+```
+
+For the useage of anova we need to convert "type of material" and "temperature" as factors.
+```{r}
+baterie$material <- factor(baterie$material)
+baterie$teplota <- factor(baterie$teplota)
+                  
+head(baterie)
+str(baterie)
+```
+
+
+## Visualization
+
+# Box plots
+
+          
+```{r}
+#library("ggpubr")
+ggboxplot(baterie, x = "material", y = "zivotnost", color = c("#999999", "#E69F00", "#56B4E9"), main = "Dependency of battery lifetime and type of material", xlab = "Type of material", ylab = "Battery lifetime") +
+  geom_jitter(width = 0.1)
+```
+
+```{r}
+#library("ggpubr")
+ggboxplot(baterie, x = "teplota", y = "zivotnost", color = c("#999999", "#E69F00", "#56B4E9"), main = "Dependency of battery lifetime and temperature", xlab = "Temperature", ylab = "Battery lifetime") +
+  geom_jitter(width = 0.1)
+```
+
+
+Combined into one box plot: lifetime from type of material and lifetime from temperature 
+```{r}
+boxplot(zivotnost ~ material * teplota, data = baterie, frame = FALSE, col = c("white", "steelblue", "gray"), xlab = "Type of material.Temperature", ylab = "Battery lifetime")
+```
+
+# Interaction plots
+Interaction plot is suitable for representing relatonships between lifetime of bateries, types of material and temperature.
+For creating an interaction plot we can use a ggline or a interaction.plot function.
+       
+```{r}
+#library("ggpubr")
+ggline(baterie, x = "teplota", y = "zivotnost", color = "material", add = c("mean_se"), xlab = "Temperature", ylab = "Battery lifetime", palette = c("#999999", "#E69F00", "#56B4E9"), main = "Interaction plot (with standard error)")
+```
+
+
+                 
+```{r}
+interaction.plot(x.factor = baterie$teplota, trace.factor = baterie$material, response = baterie$zivotnost, fun = mean, type = "b", legend = TRUE, xlab = "Temperature", ylab = "Battery lifetime", col = c("#999999", "#E69F00", "#56B4E9"), trace.label = "Material", main = "Interaction plot")
+```
+
+
+# Two-way anova with interaction effect
+
+```{r}
+anova <- aov(zivotnost ~ material * teplota, data = baterie) # Two-way ANOVA with interaction effect
+summary(anova)
+```
+From the results of anova, we can conclude the following (based on the p-values and a significance level of 0.05):
+The p-value of type of material (material) and temperature (teplota) is significant. Also the interaction of both factors is significant, from which we conclude that these factors influence each other.
+
+## Conclusion
+Results of two-way anova show that the type of material and temperature both have an impact on the battery lifetime. These two factors also influence each other. We can see, that battery lifetime is shortened by increasing the temperature and at the same time increases with the decrease in temperature. At low temperature the use of different types of materials will not change battery lifetime significantly. The biggest differences in battery lifetime are seen at the middle temperature, where the material C  has the longest lifetime. The material B has the longest lifetime at lower temperature, but at the same time it has shorter lifetime at the highest temperature. We conclude, that the material B is the most sensitive to temperature changes and that the least sensitive type of material is C, therefore we consider it the best choice for the use under unstedy temperature conditions.
+
+
+
